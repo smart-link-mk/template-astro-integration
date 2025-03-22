@@ -1,0 +1,50 @@
+{
+  "name": "@smart-link-mk/template-astro-integration",
+  "description": "Use Astro to build a Smart-Link template",
+  "version": "1.0.0",
+  "type": "module",
+  "author": "Muamet Islami",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smart-link-mk/template-astro-integration.git"
+  },
+  "keywords": [
+    "astro-integration",
+    "smart-link",
+    "template"
+  ],
+  "bugs": "https://github.com/smart-link-mk/template-astro-integration/issues",
+  "homepage": "https://smartlink.mk",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "astro build \"src/**/*.ts\" && tsc",
+    "build:ci": "astro build \"src/**/*.ts\"",
+    "dev": "astro dev \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/json-schema": "^7.0.15",
+    "@types/lodash.set": "^4.3.9",
+    "@types/node": "^22.13.10",
+    "astro": "^5.5.3"
+  },
+  "publishConfig": {
+    "provenance": false
+  },
+  "dependencies": {
+    "@smart-link-mk/api-client-sdk": "^0.0.1",
+    "adm-zip": "^0.5.16",
+    "json-schema-to-typescript": "^15.0.4",
+    "liquidjs": "^10.21.0",
+    "lodash.set": "^4.3.2",
+    "walkjs": "^6.0.1"
+  }
+}
