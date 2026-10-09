@@ -1,13 +1,14 @@
 import type { AstroIntegration } from "astro";
 import { Liquid } from "liquidjs";
 import lodashSet from "lodash.set";
-import { readFile, rename, writeFile } from "node:fs/promises";
+import { rename } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { apply } from "walkjs";
 import AdmZip from "adm-zip";
 import { Client } from "@smart-link-mk/api-client-sdk";
 import type { JSONSchema4 } from "json-schema";
 import { compile } from "json-schema-to-typescript";
+import {  readFileSync, writeFileSync } from "node:fs";
 
 export default function createPlugin(params: {
   schema: JSONSchema4;
@@ -15,11 +16,13 @@ export default function createPlugin(params: {
   name: string;
   version: string;
   config: import("@SmartLinkTypes").RawContext;
+  stage?: string;
 }): AstroIntegration {
   const { schema, apiKey, name, version, config } = params;
 
   const smartLinkClient = new Client({
     apiKey,
+    stage: params.stage,
   });
 
   const liquid = new Liquid();
@@ -35,20 +38,21 @@ export default function createPlugin(params: {
               typeof node.val === "boolean"
             ) {
               const p = node.getPath(
-                (node) => node.key + (node.children.length ? "." : "")
+                (node) => node.key + (node.children.length ? "." : ""),
               );
               lodashSet(config as any, p, `{{ context.${p} }}`);
             }
           });
         }
+        const assetOrigin =
+          command == "build"
+            ? `https://templates.smartlink.mk/${
+                (await smartLinkClient.user.me()).id
+              }/${name}/${version}`
+            : undefined;
         updateConfig({
           trailingSlash: "never",
-          base:
-            command == "build"
-              ? `https://templates.smartlink.mk/${
-                  (await smartLinkClient.user.me()).userId
-                }/${name}/${version}/`
-              : undefined,
+          build: assetOrigin ? { assetsPrefix: assetOrigin } : undefined,
           vite: {
             plugins: [
               {
@@ -73,7 +77,7 @@ export default function createPlugin(params: {
                             .replace(/[\t]/g, "\\t")
                             .replace(/[\"]/g, '\\"')
                             .replace(/\\'/g, "\\'");
-                        })
+                        }),
                       ),
                       templateBaseUrl: ".",
                     });
@@ -92,8 +96,8 @@ export default function createPlugin(params: {
         const newName = fileURLToPath(new URL("./index.liquid", dir));
         await rename(oldName.toString(), newName.toString());
 
-        const fileContents = await readFile(newName, "utf8");
-        await writeFile(newName, fileContents.replaceAll('\"/http', '\"http'));
+        const fileContents = readFileSync(newName, "utf8");
+        await writeFileSync(newName, fileContents.replaceAll('\"/http', '\"http'));
 
         const shouldPublish = process.argv.includes("--publish");
         if (shouldPublish) {
@@ -103,7 +107,7 @@ export default function createPlugin(params: {
           zip.addLocalFolder(dir.pathname);
 
           const buffer = await zip.toBufferPromise();
-          const blob = new Blob([buffer]);
+          const blob = new Blob([new Uint8Array(buffer)]);
 
           const template =
             await smartLinkClient.templates.assertTemplateExists(name);

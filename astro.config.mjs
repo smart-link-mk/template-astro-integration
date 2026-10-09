@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     SmartLink({
       name: "test-astro-integration",
-      version: "1.0.0",
+      version: "1.0.2",
       apiKey: "",
       schema: {
         $schema: "http://json-schema.org/draft-07/schema#",
